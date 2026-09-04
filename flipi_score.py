@@ -245,6 +245,17 @@ def main(argv=None):
     bp.add_argument("-i", "--input", required=True, help="Input CSV file")
     bp.add_argument("-o", "--output", default="results.csv", help="Output CSV file")
 
+    # Audit dispatch
+    ap = subparsers.add_parser("audit", help="Dispatch audit task across workers")
+    ap.add_argument("--task-id", required=True, help="Task identifier")
+
+    # Supervisory chat
+    cp = subparsers.add_parser("chat", help="Air-gapped supervisory chat")
+    cp.add_argument("query", nargs="+", help="Query text")
+
+    # Audit verification
+    subparsers.add_parser("verify-audit", help="Verify HMAC audit trail integrity")
+
     args = parser.parse_args(argv)
 
     if args.command == "single":
@@ -256,8 +267,37 @@ def main(argv=None):
             nodal_sites=args.nodal_sites,
         )
         print(json.dumps(result, indent=2))
+        return 0
     elif args.command == "batch":
         process_batch(args.input, args.output)
+        return 0
+    elif args.command == "audit":
+        from agents.supervisor import SystemSupervisor
+        from agents.models import SystemTaskPayload
+        supervisor = SystemSupervisor(model_provider="mock")
+        payload = SystemTaskPayload(
+            task_id=args.task_id,
+            target_identifier="CLI-TARGET",
+            primary_metric=10.0,
+            secondary_metric=3.0,
+            status_descriptor="NOMINAL",
+        )
+        dossier = supervisor.process_task(payload)
+        print(json.dumps(dossier.to_dict(), indent=2, default=str))
+        return 0
+    elif args.command == "chat":
+        from agents.supervisor import SystemSupervisor
+        supervisor = SystemSupervisor(model_provider="mock")
+        query = " ".join(args.query)
+        response = supervisor.query_supervisory_chat(query)
+        print(json.dumps({"response": response}, indent=2))
+        return 0
+    elif args.command == "verify-audit":
+        from agents.base import AuditLogger
+        verified = AuditLogger.verify_integrity()
+        trail_len = len(AuditLogger.get_trail())
+        print(json.dumps({"audit_trail_length": trail_len, "integrity_verified": verified}, indent=2))
+        return 0
 
 
 if __name__ == "__main__":

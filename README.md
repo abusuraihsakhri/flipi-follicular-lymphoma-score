@@ -1,13 +1,12 @@
 # Flipi Follicular Lymphoma Score
 
-> **Domain:** Medical Oncology & Cancer Staging Systems  
-> **Reference Guidelines & Standards:** `AJCC Cancer Staging Manual & NCCN Clinical Practice Guidelines`
+> **Domain:** Medical Oncology & Cancer Staging Systems
+> **Reference Guidelines & Standards:** AJCC Cancer Staging Manual & NCCN Clinical Practice Guidelines
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
 ![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
 ![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
@@ -36,7 +35,6 @@ Risk groups:
 
 Reference: Solal-Céligny et al., Blood 2004;104:1258-1265
 
-Zero-dependency Python implementation.
 License: MIT
 
 ---
@@ -47,83 +45,118 @@ License: MIT
 
 - **`calculate_flipi()`**: Calculate FLIPI score for follicular lymphoma.
 
-Parameters:
-    age: Patient age in years
-    stage: Ann Arbor stage (1-4)
-    hemoglobin: Hemoglobin level in g/dL
-    ldh_ratio: LDH / upper limit of normal (e.g., 1.5 means 1.5x ULN)
-    nodal_sites: Number of involved nodal sites
+  Parameters:
+    - age: Patient age in years
+    - stage: Ann Arbor stage (1-4)
+    - hemoglobin: Hemoglobin level in g/dL
+    - ldh_ratio: LDH / upper limit of normal (e.g., 1.5 means 1.5x ULN)
+    - nodal_sites: Number of involved nodal sites
 
-Returns:
+  Returns:
     Dict with FLIPI score, risk group, survival estimates, and details.
+
 - **`process_batch()`**: Process a CSV of patients and write FLIPI results.
-- **`main()`** — calculates and validates main parameters.
+- **`main()`** — CLI entry point for all commands.
 
 ---
 
-## 📐 Mathematical Formulation & Logic
+## 📐 Mathematical Formulation
 
-```text
-  Calculate FLIPI score for follicular lymphoma.
-  score = 0
-  elif score == 2:
-  return (
-  res = calculate_flipi(
+```
+FLIPI Score = Σ (risk_factors)
+
+risk_factors:
+  - age > 60                    → 1 point
+  - Ann Arbor stage III or IV   → 1 point
+  - Hemoglobin < 12 g/dL        → 1 point
+  - LDH > upper limit normal    → 1 point
+  - Nodal sites > 4             → 1 point
+
+Risk Groups:
+  score 0-1  → Low risk
+  score 2    → Intermediate risk
+  score ≥3   → High risk
 ```
 
 ---
 
 ## 💻 CLI Quickstart & Usage
 
-### 1. Guided Interactive Mode
+### 1. Single Patient Evaluation
 ```bash
-python cli.py
+python cli.py single --age 65 --stage 4 --hemoglobin 10.0 --ldh-ratio 2.0 --nodal-sites 6
 ```
 
-### 2. Direct Parameterized Evaluation
+### 2. Batch Processing (CSV)
 ```bash
-python cli.py --input data.csv
+python cli.py batch --input patients.csv --output results.csv
+```
+
+### 3. Enterprise Audit Dispatch
+```bash
+python cli.py audit --task-id TASK-001
+```
+
+### 4. Supervisory Chat (Air-Gapped)
+```bash
+python cli.py chat "Explain FLIPI scoring"
+```
+
+### 5. Verify Audit Trail Integrity
+```bash
+python cli.py verify-audit
 ```
 
 ### Parameter Reference
-- `--interactive`: Launch guided terminal interactive wizard.
-- `--input <path>`: Evaluate input from JSON or CSV specification.
-- `--json`: Output deterministic structured results in JSON format.
+- `single`: Evaluate a single patient (requires --age, --stage, --hemoglobin, --ldh-ratio, --nodal-sites)
+- `batch`: Batch process CSV file (requires --input, optional --output)
+- `audit`: Dispatch audit task (requires --task-id)
+- `chat`: Supervisory chat (requires query text)
+- `verify-audit`: Verify HMAC audit trail integrity
 
-### Input Data Schema
+### Batch CSV Input Schema
 
 | Field | Description | Requirement |
 |:------|:------------|:------------|
-| `Patient_ID` | Parameter / observation metric | Required |
-| `v1` | Parameter / observation metric | Required |
-| `v2` | Parameter / observation metric | Required |
-| `v3` | Parameter / observation metric | Required |
+| `age` | Patient age in years | Required |
+| `stage` | Ann Arbor stage (1-4) | Required |
+| `hemoglobin` | Hemoglobin in g/dL | Required |
+| `ldh_ratio` | LDH / upper limit of normal | Required |
+| `nodal_sites` | Number of involved nodal sites | Required |
 
 ---
 
 ## 🛡️ Security & Enterprise Architecture
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
+* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
+* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation.
+* **FastAPI REST API:** Exposes OpenAPI 3.1 REST endpoints and Prometheus metrics (`/metrics`).
+* **Multi-Worker Audit System:** InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker.
+
+### Security Notes
+- The `AUDIT_SECRET_KEY` environment variable controls HMAC signing. In production, set this to a strong random value.
+- Without `AUDIT_SECRET_KEY` set, a random key is generated per process (suitable for development/testing).
 
 ---
 
 ## 🧪 Testing & Verification
 
-Run the automated test suite:
+Run the complete test suite:
 
 ```bash
 pytest -v
 ```
 
-Execute high-throughput batch simulation benchmarks:
-
-```bash
-python simulator.py --tasks 1000 --concurrency 8
-```
+This runs 31 tests covering:
+- FLIPI risk factor scoring
+- Risk group classification
+- Full calculation scenarios
+- Input validation
+- Batch processing
+- PHI guard enforcement
+- Worker agent evaluation
+- Supervisor consensus and audit
+- Enrichment modules
 
 ---
 
@@ -131,5 +164,12 @@ python simulator.py --tasks 1000 --concurrency 8
 
 ```bash
 docker build -t flipi-follicular-lymphoma-score .
-docker run -p 8000:8000 flipi-follicular-lymphoma-score
+docker run flipi-follicular-lymphoma-score single --age 45 --stage 1 --hemoglobin 14.0 --ldh-ratio 0.9 --nodal-sites 2
+```
+
+With docker-compose:
+```bash
+# Set a strong secret in production
+export AUDIT_SECRET_KEY=$(python -c "import os; print(os.urandom(32).hex())")
+docker-compose up
 ```

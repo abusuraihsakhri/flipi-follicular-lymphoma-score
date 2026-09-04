@@ -9,14 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml .
+# Install optional dependencies for FastAPI/Pydantic features
 RUN pip install --no-cache-dir fastapi uvicorn pydantic pytest
 
 COPY . .
 
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-CMD ["python", "cli.py", "serve", "--host", "0.0.0.0", "--port", "8000"]
+# Default: show CLI help. Override CMD for specific commands.
+CMD ["python", "cli.py", "--help"]
