@@ -77,3 +77,14 @@ jobs:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Smoke-test deployed URLs
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 "${PAGE_URL}" -o /tmp/flipi-home.html
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 "${PAGE_URL}web/" -o /tmp/flipi-page.html
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 "${PAGE_URL}web/flipi.js" -o /tmp/flipi-script.js
+          grep -q 'href="./web/"' /tmp/flipi-home.html
+          grep -q 'id="flipi-form"' /tmp/flipi-page.html
+          grep -q 'calculateFlipi' /tmp/flipi-script.js
