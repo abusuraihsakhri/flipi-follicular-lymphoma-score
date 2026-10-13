@@ -1,236 +1,137 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flipi Follicular Lymphoma Score — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Classical FLIPI prognostic score calculator for follicular lymphoma. Local, browser-only calculation.">
+  <title>FLIPI Calculator | Follicular Lymphoma</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1220; --panel:#141e2e; --border:#304057; --text:#f1f5f9; --muted:#b8c7da; --accent:#7db5ff; --focus:#ffd579; }
+    * { box-sizing:border-box; }
+    html { font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.5; }
+    body { margin:0; background:var(--bg); color:var(--text); padding:24px 16px 48px; }
+    main { max-width:1080px; margin:0 auto; }
+    a { color:var(--accent); }
+    header { margin-bottom:24px; }
+    .eyebrow { font-size:.8rem; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); font-weight:700; }
+    h1 { font-size:clamp(1.65rem,3.8vw,2.5rem); letter-spacing:-.025em; margin:8px 0; line-height:1.2; }
+    h2 { font-size:1.15rem; margin:0 0 16px; }
+    p { margin:8px 0; }
+    .muted, small { color:var(--muted); }
+    .columns { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:24px; }
+    .inputs { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .field { min-width:0; }
+    .wide { grid-column:1/-1; }
+    label { display:block; font-weight:600; font-size:.9rem; margin-bottom:6px; }
+    input, select { width:100%; border:1px solid #627189; background:#0c1728; border-radius:8px; color:var(--text); padding:11px 12px; font:inherit; }
+    input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
+    .hint { display:block; margin-top:5px; font-size:.78rem; line-height:1.4; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+    button { font:inherit; cursor:pointer; border-radius:8px; border:1px solid var(--accent); padding:10px 17px; font-weight:700; background:#2c6bc1; color:white; }
+    button:hover { filter:brightness(1.15); }
+    button.secondary { background:transparent; color:var(--text); border-color:#71839c; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .placeholder { padding:44px 8px; text-align:center; color:var(--muted); }
+    .placeholder strong { display:block; font-size:1.1rem; color:var(--text); }
+    .scoreline { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:18px; }
+    .big-score { font-size:2.4rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+    .risk { font-size:1.1rem; font-weight:750; }
+    ul.factors { list-style:none; padding:0; margin:0 0 18px; }
+    ul.factors li { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+    ul.factors strong { flex-shrink:0; font-variant-numeric:tabular-nums; }
+    .positive { color:#86efac; }
+    .neutral { color:var(--muted); }
+    .survival { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .stat { background:#0c1728; padding:12px; border:1px solid var(--border); border-radius:10px; }
+    .stat strong { display:block; font-size:1.65rem; font-variant-numeric:tabular-nums; }
+    .stat small { font-size:.76rem; }
+    .notice { margin:18px 0 0; border-left:3px solid var(--accent); padding:9px 12px; color:var(--muted); background:#0c1728; font-size:.85rem; }
+    .error { color:#ffd3d3; border:1px solid #b74c4c; background:#401b23; padding:12px; border-radius:8px; margin-top:16px; }
+    .notes { margin-top:20px; color:var(--muted); font-size:.88rem; }
+    .notes h2 { color:var(--text); }
+    [hidden] { display:none !important; }
+    @media (max-width:740px) { .columns { grid-template-columns:1fr; } .panel { padding:18px; } body { padding-top:18px; } }
+    @media (max-width:390px) { .inputs { grid-template-columns:1fr; } }
+  </style>
+  <script src="./flipi.js" defer></script>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Flipi Follicular Lymphoma Score</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+<main>
+  <header>
+    <div class="eyebrow">Hematology · Clinical prognostic index</div>
+    <h1>Follicular Lymphoma International Prognostic Index</h1>
+    <p class="muted">Classical FLIPI (FLIPI-1) · Five risk factors · Score 0–5</p>
+  </header>
+  <div class="columns">
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">Clinical inputs</h2>
+      <form id="flipi-form">
+        <div class="inputs">
+          <div class="field">
+            <label for="age">Age (years)</label>
+            <input id="age" name="age" type="number" min="0" step="1" required inputmode="numeric" placeholder="e.g. 65">
+            <small class="hint">Risk factor if age > 60</small>
+          </div>
+          <div class="field">
+            <label for="stage">Ann Arbor stage</label>
+            <select id="stage" name="stage" required>
+              <option value="" selected disabled>Choose stage</option>
+              <option value="1">I</option>
+              <option value="2">II</option>
+              <option value="3">III</option>
+              <option value="4">IV</option>
+            </select>
+            <small class="hint">Stage III or IV scores 1</small>
+          </div>
+          <div class="field">
+            <label for="hemoglobin">Hemoglobin (g/dL)</label>
+            <input id="hemoglobin" name="hemoglobin" type="number" min="0" step="any" required inputmode="decimal" placeholder="e.g. 11.5">
+            <small class="hint">Risk factor if &lt; 12 g/dL</small>
+          </div>
+          <div class="field">
+            <label for="ldh-ratio">LDH / upper limit of normal</label>
+            <input id="ldh-ratio" name="ldh_ratio" type="number" min="0" step="any" required inputmode="decimal" placeholder="e.g. 1.2">
+            <small class="hint">1.0 = laboratory ULN; > 1.0 scores 1</small>
+          </div>
+          <div class="field wide">
+            <label for="nodal-sites">Number of involved nodal areas</label>
+            <input id="nodal-sites" name="nodal_sites" type="number" min="0" step="1" required inputmode="numeric" placeholder="e.g. 5">
+            <small class="hint">Count anatomical nodal regions, not individual lymph nodes; > 4 scores 1</small>
+          </div>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
+        <div class="actions">
+          <button type="submit">Calculate FLIPI</button>
+          <button type="reset" class="secondary">Clear</button>
         </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
+        <p id="error" class="error" role="alert" hidden></p>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="result-title">
+      <h2 id="result-title">Result</h2>
+      <div id="result" aria-live="polite" hidden>
+        <div class="scoreline">
+          <div><div class="muted">FLIPI score</div><div id="score" class="big-score"></div></div>
+          <div><div class="muted">Prognostic category</div><div id="risk" class="risk"></div></div>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
+        <h2>Component breakdown</h2>
+        <ul id="factors" class="factors"></ul>
+        <h2>Historical cohort survival</h2>
+        <div class="survival">
+          <div class="stat"><strong id="survival-5"></strong><small>5-year overall survival</small></div>
+          <div class="stat"><strong id="survival-10"></strong><small>10-year overall survival</small></div>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Flipi Follicular Lymphoma Score Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "flipi-follicular-lymphoma-score",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+        <p class="notice">These are rounded estimates from patients diagnosed in the original historical cohort, not personalized contemporary survival predictions. FLIPI does not determine treatment need or select therapy.</p>
+        <div class="actions"><button type="button" id="download" class="secondary" disabled>Download text summary</button></div>
+      </div>
+      <div id="empty" class="placeholder"><strong>No score calculated</strong>Complete the five clinical inputs, then select Calculate FLIPI.</div>
+    </section>
+  </div>
+  <section class="notes" aria-labelledby="notes-title">
+    <h2 id="notes-title">Scope, privacy and references</h2>
+    <p>The calculator runs entirely in this browser, without sending inputs to a server or storing patient information. Do not enter patient identifiers. The result is for educational and clinical decision-support context, not a substitute for specialist assessment.</p>
+    <p>Solal-Céligny P et al. <em>Blood.</em> 2004;104:1258–1265. <a href="https://doi.org/10.1182/blood-2003-12-4434" rel="noopener noreferrer">doi:10.1182/blood-2003-12-4434</a>. See also <a href="https://www.cancer.gov/types/lymphoma/hp/indolent-b-cell-lymphoma-treatment-pdq" rel="noopener noreferrer">NCI PDQ</a> on prognostic-index limitations.</p>
+  </section>
+</main>
 </body>
 </html>

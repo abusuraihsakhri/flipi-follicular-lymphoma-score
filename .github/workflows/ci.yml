@@ -26,9 +26,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install fastapi uvicorn pydantic pytest
 
-    - name: Run Pytest Suite
+    - name: Verify Python dependencies and syntax
       run: |
-        pytest -v
+        python -m pip check
+        python -m compileall -q flipi_score.py cli.py agents tests enrichment.py simulator.py
+
+    - name: Run Pytest Suite
+      run: pytest -v
+
+    - name: Set up Node.js for static browser tests
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Validate browser JavaScript
+      run: |
+        node --check web/flipi.js
+        node --test web/flipi.test.cjs
 
     - name: Security SAST & Zero-PHI Audit
       run: |
@@ -38,3 +52,39 @@ jobs:
         assert AuditLogger.verify_integrity() is True
         print('Security & Zero-PHI Audit Passed!')
         "
+
+  deploy-pages:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: test-and-audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Prepare static site
+        run: |
+          mkdir -p _site/web
+          cp index.html _site/index.html
+          cp web/index.html web/flipi.js _site/web/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Smoke-test deployed URLs
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 "${PAGE_URL}" -o /tmp/flipi-home.html
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 "${PAGE_URL}web/" -o /tmp/flipi-page.html
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 5 "${PAGE_URL}web/flipi.js" -o /tmp/flipi-script.js
+          grep -q 'href="./web/"' /tmp/flipi-home.html
+          grep -q 'id="flipi-form"' /tmp/flipi-page.html
+          grep -q 'calculateFlipi' /tmp/flipi-script.js

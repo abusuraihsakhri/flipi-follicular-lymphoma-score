@@ -26,6 +26,8 @@ import argparse
 import csv
 import json
 import sys
+import math
+import numbers
 from typing import Dict, Any, Optional
 
 
@@ -72,17 +74,21 @@ def calculate_flipi(
     Returns:
         Dict with FLIPI score, risk group, survival estimates, and details.
     """
-    # Validate
-    if age < 0:
-        raise ValueError("Age must be non-negative")
+    # Guard against booleans, fractional counts, NaN, and infinities. These
+    # otherwise pass some numeric comparisons and can silently change scoring.
+    for name, value in (("Age", age), ("Ann Arbor stage", stage),
+                        ("Nodal sites", nodal_sites)):
+        if isinstance(value, bool) or not isinstance(value, numbers.Integral):
+            raise ValueError(f"{name} must be an integer")
+        if value < 0:
+            raise ValueError(f"{name} must be non-negative")
     if stage < 1 or stage > 4:
         raise ValueError(f"Ann Arbor stage must be 1-4, got {stage}")
-    if hemoglobin < 0:
-        raise ValueError("Hemoglobin must be non-negative")
-    if ldh_ratio < 0:
-        raise ValueError("LDH ratio must be non-negative")
-    if nodal_sites < 0:
-        raise ValueError("Nodal sites must be non-negative")
+    for name, value in (("Hemoglobin", hemoglobin), ("LDH ratio", ldh_ratio)):
+        if isinstance(value, bool) or not isinstance(value, numbers.Real):
+            raise ValueError(f"{name} must be a finite number")
+        if not math.isfinite(value) or value < 0:
+            raise ValueError(f"{name} must be finite and non-negative")
 
     # Score each factor
     factors = {}
@@ -140,32 +146,15 @@ def _risk_group(score: int) -> str:
 
 
 def _recommendation(group: str, score: int) -> str:
-    """Generate clinical recommendation based on FLIPI risk group."""
-    if group == "Low":
-        return (
-            "Low-risk follicular lymphoma. Excellent long-term prognosis "
-            "(10-year OS ~71%). Observation (watch and wait) appropriate for "
-            "asymptomatic patients. When treatment needed: rituximab ± chemotherapy. "
-            "Consider rituximab monotherapy for low tumor burden."
-        )
-    elif group == "Intermediate":
-        return (
-            "Intermediate-risk follicular lymphoma. Moderate prognosis "
-            "(10-year OS ~51%). Treatment based on symptoms and tumor burden. "
-            "First-line: R-CHOP, R-bendamustine, or R-CVP. "
-            "Rituximab maintenance may improve progression-free survival. "
-            "Consider clinical trial enrollment."
-        )
-    else:
-        return (
-            "High-risk follicular lymphoma. Guarded prognosis "
-            "(10-year OS ~36%). Early treatment recommended. "
-            "First-line: R-CHOP or R-bendamustine with rituximab maintenance. "
-            "Consider autologous stem cell transplant in first remission. "
-            "PI3K inhibitors, lenalidomide, or bispecific antibodies for relapsed disease. "
-            "Monitor for transformation to aggressive lymphoma. "
-            "Clinical trial enrollment strongly encouraged."
-        )
+    """Return non-prescriptive context: FLIPI is prognostic, not predictive."""
+    return (
+        f"Classical FLIPI {score}/5 ({group} risk) is a prognostic classification. "
+        "Historical 5- and 10-year overall survival figures describe the original "
+        "cohort and must not be interpreted as individual contemporary predictions. "
+        "FLIPI alone does not establish the need for treatment, select therapy, "
+        "or predict treatment response. Management requires clinical assessment "
+        "of symptoms, tumor burden, disease course, and patient factors."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -179,13 +168,27 @@ def process_batch(input_csv: str, output_csv: str) -> int:
         fieldnames = list(reader.fieldnames or [])
         rows = list(reader)
 
-    out_fields = fieldnames + [
+    required = {"age", "stage", "hemoglobin", "ldh_ratio", "nodal_sites"}
+    if len(fieldnames) != len(set(fieldnames)):
+        raise ValueError("CSV contains duplicate column names")
+    missing = required.difference(fieldnames)
+    if missing:
+        raise ValueError("CSV missing required columns: " + ", ".join(sorted(missing)))
+
+    # Avoid duplicate output headers if a result CSV is processed again.
+    result_columns = [
+        "flipi_score", "flipi_risk_group", "five_year_survival_pct",
+        "ten_year_survival_pct", "clinical_recommendation",
+    ]
+    out_fields = [name for name in fieldnames if name not in result_columns] + [
         "flipi_score", "flipi_risk_group", "five_year_survival_pct",
         "ten_year_survival_pct", "clinical_recommendation",
     ]
     out_rows = []
     for r in rows:
         try:
+            if None in r or any(value is None for value in r.values()):
+                raise ValueError("row has an incorrect number of fields")
             res = calculate_flipi(
                 age=int(r["age"]),
                 stage=int(r["stage"]),
@@ -193,19 +196,24 @@ def process_batch(input_csv: str, output_csv: str) -> int:
                 ldh_ratio=float(r["ldh_ratio"]),
                 nodal_sites=int(r["nodal_sites"]),
             )
-            row_dict = dict(r)
+            row_dict = {key: value for key, value in r.items() if key is not None}
             row_dict["flipi_score"] = res["flipi_score"]
             row_dict["flipi_risk_group"] = res["flipi_risk_group"]
             row_dict["five_year_survival_pct"] = res["five_year_survival_pct"]
             row_dict["ten_year_survival_pct"] = res["ten_year_survival_pct"]
             row_dict["clinical_recommendation"] = res["clinical_recommendation"]
-        except (ValueError, KeyError) as e:
-            row_dict = dict(r)
+        except (ValueError, KeyError, TypeError, OverflowError) as e:
+            row_dict = {key: value for key, value in r.items() if key is not None}
             row_dict["flipi_score"] = f"ERROR: {e}"
             row_dict["flipi_risk_group"] = ""
             row_dict["five_year_survival_pct"] = ""
             row_dict["ten_year_survival_pct"] = ""
             row_dict["clinical_recommendation"] = ""
+        # Prevent spreadsheet software from interpreting untrusted CSV fields
+        # as formulas when exported files are opened.
+        for key, value in row_dict.items():
+            if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@")):
+                row_dict[key] = "'" + value
         out_rows.append(row_dict)
 
     with open(output_csv, mode="w", encoding="utf-8", newline="") as f:
