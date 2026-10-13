@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Flipi Follicular Lymphoma Score API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
+    "description": "Classical FLIPI scoring and optional generic audit/supervisor endpoints. The generated FastAPI schema at /openapi.json is authoritative.",
     "version": "3.0.0-ENTERPRISE",
     "contact": {
       "name": "Dr. Abu Suraih Sakhri",
@@ -25,7 +25,7 @@
         "summary": "Prometheus operational metrics",
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "JSON summary of in-process audit and task counters"
           }
         }
       }
@@ -76,7 +76,7 @@
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
+        "summary": "Return a clearly labeled deterministic mock response (no clinical inference)",
         "requestBody": {
           "content": {
             "application/json": {
@@ -107,6 +107,59 @@
         "responses": {
           "200": {
             "description": "Cryptographic audit trail"
+          }
+        }
+      }
+    },
+    "/api/flipi": {
+      "post": {
+        "summary": "Calculate the classical five-factor FLIPI score",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "age",
+                  "stage",
+                  "hemoglobin",
+                  "ldh_ratio",
+                  "nodal_sites"
+                ],
+                "properties": {
+                  "age": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "stage": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                  },
+                  "hemoglobin": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "ldh_ratio": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "nodal_sites": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FLIPI score, risk group and historical cohort survival figures"
+          },
+          "422": {
+            "description": "Invalid input"
           }
         }
       }
