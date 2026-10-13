@@ -196,14 +196,14 @@ def process_batch(input_csv: str, output_csv: str) -> int:
                 ldh_ratio=float(r["ldh_ratio"]),
                 nodal_sites=int(r["nodal_sites"]),
             )
-            row_dict = dict(r)
+            row_dict = {key: value for key, value in r.items() if key is not None}
             row_dict["flipi_score"] = res["flipi_score"]
             row_dict["flipi_risk_group"] = res["flipi_risk_group"]
             row_dict["five_year_survival_pct"] = res["five_year_survival_pct"]
             row_dict["ten_year_survival_pct"] = res["ten_year_survival_pct"]
             row_dict["clinical_recommendation"] = res["clinical_recommendation"]
         except (ValueError, KeyError, TypeError, OverflowError) as e:
-            row_dict = dict(r)
+            row_dict = {key: value for key, value in r.items() if key is not None}
             row_dict["flipi_score"] = f"ERROR: {e}"
             row_dict["flipi_risk_group"] = ""
             row_dict["five_year_survival_pct"] = ""
