@@ -26,9 +26,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install fastapi uvicorn pydantic pytest
 
-    - name: Run Pytest Suite
+    - name: Verify Python dependencies and syntax
       run: |
-        pytest -v
+        python -m pip check
+        python -m compileall -q flipi_score.py cli.py agents tests enrichment.py simulator.py
+
+    - name: Run Pytest Suite
+      run: pytest -v
+
+    - name: Set up Node.js for static browser tests
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Validate browser JavaScript
+      run: |
+        node --check web/flipi.js
+        node --test web/flipi.test.cjs
 
     - name: Security SAST & Zero-PHI Audit
       run: |
