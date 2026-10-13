@@ -133,8 +133,11 @@
       const link = document.createElement("a");
       link.href = url;
       link.download = "flipi-summary.txt";
+      document.body.appendChild(link);
       link.click();
-      URL.revokeObjectURL(url);
+      link.remove();
+      // Allow Safari and other browsers to consume the blob before revocation.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
   }
 
