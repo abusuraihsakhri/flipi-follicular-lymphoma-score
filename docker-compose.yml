@@ -1,15 +1,15 @@
-version: '3.8'
-
 services:
   flipi-follicular-lymphoma-score:
     build: .
     container_name: flipi-follicular-lymphoma-score
     ports:
       - "8000:8000"
+    # A random process-local audit key is used if AUDIT_SECRET_KEY is unset.
+    # Provide an external secret for stable HMAC verification across restarts.
     environment:
-      # IMPORTANT: Override this in production with a strong random secret
-      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-change-me-in-production}
+      - AUDIT_SECRET_KEY=${AUDIT_SECRET_KEY:-}
       - MODEL_PROVIDER=mock
+    command: ["uvicorn", "agents.api:app", "--host", "0.0.0.0", "--port", "8000"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
