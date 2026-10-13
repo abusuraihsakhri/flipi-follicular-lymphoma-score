@@ -95,12 +95,14 @@
       ].join("\n");
       download.disabled = false;
       result.hidden = false;
+      document.getElementById("empty").hidden = true;
     }
 
     form.addEventListener("submit", event => {
       event.preventDefault();
       error.hidden = true;
       result.hidden = true;
+      document.getElementById("empty").hidden = false;
       download.disabled = true;
       lastSummary = "";
       try {
@@ -120,6 +122,7 @@
     form.addEventListener("reset", () => {
       error.hidden = true;
       result.hidden = true;
+      document.getElementById("empty").hidden = false;
       lastSummary = "";
       download.disabled = true;
     });
